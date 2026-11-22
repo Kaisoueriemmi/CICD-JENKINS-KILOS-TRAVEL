@@ -69,6 +69,10 @@ class Settings(BaseSettings):
     
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
+    RATE_LIMIT_ENABLED: bool = True  # set to false in automated tests
+
+    # Frontend (links in emails)
+    FRONTEND_URL: str = "http://localhost:3000"
     
     # Logging
     LOG_LEVEL: str = "INFO"
