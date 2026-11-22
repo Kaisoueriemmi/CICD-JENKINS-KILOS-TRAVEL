@@ -1,0 +1,15 @@
+configuration-as-code
+job-dsl
+workflow-aggregator
+pipeline-stage-view
+blueocean
+git
+github
+credentials
+credentials-binding
+docker-workflow
+junit
+ws-cleanup
+email-ext
+mailer
+timestamper
