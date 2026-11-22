@@ -1,0 +1,31 @@
+# Shared Jenkins + Mailpit.
+#   cp .env.example .env   # fill in the values
+#   docker compose -f docker-compose.jenkins.yml up -d --build
+services:
+  jenkins:
+    build: .
+    image: kilostravel-jenkins:local
+    container_name: kilostravel-jenkins
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # Host Docker daemon: pipeline stages run in containers, build images, run compose
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      # Group allowed to use the Docker socket. Docker Desktop: 0.
+      # Linux: stat -c %g /var/run/docker.sock
+      - "${DOCKER_GID:-0}"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: kilostravel-mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"   # web UI
+      - "1025:1025"   # SMTP
+
+volumes:
+  jenkins_home:
