@@ -8,7 +8,7 @@ One PNG per line, with the exact file name below. Take them on the shared Jenkin
 |---|---|---|---|---|
 | 1 | `01-blueocean-green-parallel.png` | Blue Ocean: a green run, "Unit tests" and "HTTP tests" side by side | F3 | ✅ |
 | 2 | `02-test-result-page.png` | "Test Result" page of a run (59 tests: 25 unit + 17 HTTP + 17 HTTP vs PostgreSQL) | F4 | ✅ |
-| 3 | `03-yellow-run-docker-skipped.png` | A yellow run (one test broken on purpose), "Docker image" and "Push to Docker Hub" skipped | F4 | ⬜ |
+| 3 | `03-yellow-run-docker-skipped.png` + `03b-yellow-run-failed-test.png` | Run #9, yellow: one test broken on purpose, "Docker image" and "Push to Docker Hub" skipped; its Test Result page (1 failed, 59 passed) | F4 | ✅ |
 | 4 | `04-artifacts-fingerprint.png` | Recorded fingerprints of the archived artifacts (`.tar.gz`, test XML, coverage) | F6 | ✅ |
 | 5 | `05-coverage-report.png` | Coverage report (77 %, threshold 70 %) | bonus | ✅ |
 | 6 | `06-dockerhub-tags.png` | Docker Hub: "Tags" tab of the repository (`<version>.<build>`) | F7, F8 | ⬜ |
@@ -26,7 +26,9 @@ Tick a line (⬜ -> ✅) in the same pull request that adds its PNG.
 
 - **1** Blue Ocean > `kilostravel-pipeline` > last green run.
 - **2** Classic UI > run > "Test Result".
-- **3** On a branch, add a failing test, for example in `backend/tests/unit/`:
+- **3** Run #9 is a Jenkins **Replay** of run #8: the replayed Jenkinsfile writes one failing
+  test after the checkout, so nothing broken ever goes to Git. To do it again by hand,
+  add a failing test, for example in `backend/tests/unit/`:
   ```python
   import pytest
 
