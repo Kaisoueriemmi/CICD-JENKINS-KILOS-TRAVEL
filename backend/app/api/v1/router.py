@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, users, wallet, flights, transactions, subscriptions, payments, notifications, iata
+from app.api.v1.endpoints import auth, users, wallet, flights, transactions, subscriptions, payments, notifications, iata, baggage
 
 api_router = APIRouter()
 
@@ -13,4 +13,4 @@ api_router.include_router(subscriptions.router, prefix="/subscriptions", tags=["
 api_router.include_router(payments.router, prefix="/payments", tags=["Payments"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 api_router.include_router(iata.router, prefix="/iata", tags=["IATA Integration"])
-
+api_router.include_router(baggage.router, prefix="/baggage", tags=["Baggage credit"])

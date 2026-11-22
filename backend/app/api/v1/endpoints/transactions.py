@@ -6,6 +6,7 @@ from app.api.v1.endpoints.auth import get_current_user
 from app.models.models import User, Transaction, Wallet, TransactionType
 from app.schemas.schemas import TransactionResponse, TransactionCreate
 from app.core.config import settings
+from app.services.baggage_credit import check_debit, service_fee as compute_service_fee
 
 router = APIRouter()
 
@@ -41,20 +42,20 @@ async def debit_from_wallet(
     
     # Get wallet
     wallet = db.query(Wallet).filter(Wallet.user_id == current_user.id).first()
-    
-    if wallet.balance_kg < amount_kg:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Insufficient balance. Available: {wallet.balance_kg} kg"
-        )
-    
-    # Calculate service fee
-    service_fee = amount_kg * settings.SERVICE_FEE_PER_KG
-    
+    if not wallet:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wallet not found")
+
+    try:
+        new_balance = check_debit(wallet.balance_kg, amount_kg)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    service_fee = compute_service_fee(amount_kg)
+
     # Update wallet
-    wallet.balance_kg -= amount_kg
-    wallet.total_used_kg += amount_kg
-    
+    wallet.balance_kg = new_balance
+    wallet.total_spent_kg += amount_kg
+
     # Create transaction
     transaction = Transaction(
         user_id=current_user.id,
@@ -121,7 +122,7 @@ async def transfer_to_user(
     
     # Update wallets
     sender_wallet.balance_kg -= amount_kg
-    sender_wallet.total_used_kg += amount_kg
+    sender_wallet.total_transferred_kg += amount_kg
     
     recipient_wallet.balance_kg += amount_kg
     recipient_wallet.total_earned_kg += amount_kg

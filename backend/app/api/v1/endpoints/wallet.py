@@ -4,6 +4,7 @@ from app.core.database import get_db
 from app.api.v1.endpoints.auth import get_current_user
 from app.models.models import User, Wallet
 from app.schemas.schemas import WalletResponse, DashboardStats
+from app.services.baggage_credit import money_saved as estimate_money_saved, carbon_reduced
 
 router = APIRouter()
 
@@ -43,12 +44,8 @@ async def get_wallet_stats(
     from app.models.models import Flight
     total_flights = db.query(Flight).filter(Flight.user_id == current_user.id).count()
     
-    # Estimate money saved (assuming 40€ per kg excess fee)
-    money_saved = wallet.total_spent_kg * 40.0
-    
-    # Estimate carbon footprint reduced (lighter planes = less fuel)
-    # Rough estimate: 1kg saved = 0.5kg CO2 reduction
-    carbon_footprint_reduced = wallet.total_earned_kg * 0.5
+    money_saved = estimate_money_saved(wallet.total_spent_kg)
+    carbon_footprint_reduced = carbon_reduced(wallet.total_earned_kg)
     
     return DashboardStats(
         total_kg_saved=wallet.total_earned_kg,
