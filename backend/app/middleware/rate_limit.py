@@ -9,12 +9,15 @@ from slowapi.errors import RateLimitExceeded
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 
+from app.core.config import settings
+
 
 # Créer le limiter avec la clé basée sur l'IP du client
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200/hour"],  # Limite par défaut : 200 requêtes par heure
     storage_uri="memory://",  # Utiliser la mémoire (pour Redis: "redis://localhost:6379")
+    enabled=settings.RATE_LIMIT_ENABLED,
 )
 
 
