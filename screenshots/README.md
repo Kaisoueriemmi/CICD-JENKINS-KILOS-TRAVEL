@@ -6,11 +6,11 @@ One PNG per line, with the exact file name below. Take them on the shared Jenkin
 
 | # | File | What it shows | Feature | Status |
 |---|---|---|---|---|
-| 1 | `01-blueocean-green-parallel.png` | Blue Ocean: a green run, "Unit tests" and "HTTP tests" side by side | F3 | ⬜ |
-| 2 | `02-test-result-page.png` | "Test Result" page of a run (42 tests: 25 unit + 17 HTTP) | F4 | ⬜ |
+| 1 | `01-blueocean-green-parallel.png` | Blue Ocean: a green run, "Unit tests" and "HTTP tests" side by side | F3 | ✅ |
+| 2 | `02-test-result-page.png` | "Test Result" page of a run (59 tests: 25 unit + 17 HTTP + 17 HTTP vs PostgreSQL) | F4 | ✅ |
 | 3 | `03-yellow-run-docker-skipped.png` | A yellow run (one test broken on purpose), "Docker image" and "Push to Docker Hub" skipped | F4 | ⬜ |
-| 4 | `04-artifacts-fingerprint.png` | Build page: archived artifacts (`.tar.gz`, test XML, coverage) + fingerprints | F6 | ⬜ |
-| 5 | `05-coverage-report.png` | Coverage report (77 %, threshold 70 %) | bonus | ⬜ |
+| 4 | `04-artifacts-fingerprint.png` | Recorded fingerprints of the archived artifacts (`.tar.gz`, test XML, coverage) | F6 | ✅ |
+| 5 | `05-coverage-report.png` | Coverage report (77 %, threshold 70 %) | bonus | ✅ |
 | 6 | `06-dockerhub-tags.png` | Docker Hub: "Tags" tab of the repository (`<version>.<build>`) | F7, F8 | ⬜ |
 | 7 | `07-docker-ps-staging-prod.png` | `docker ps` with staging (8081) and production (8082) | F9, F10 | ⬜ |
 | 8 | `08-app-staging.png` | The app in the browser on staging: `http://HOST:8081/health` | F9 | ⬜ |
