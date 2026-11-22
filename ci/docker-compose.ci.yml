@@ -1,0 +1,56 @@
+# Bonus: the app and PostgreSQL in separate containers, HTTP tests against them.
+# Used by the Jenkinsfile stage "HTTP tests vs PostgreSQL".
+#
+# Nothing is bind-mounted and no port is published: Jenkins talks to the host
+# Docker daemon through the socket, so host paths and ports would not match
+# the Jenkins workspace. The tests run in a third container on the same network.
+#
+# Run by hand from the repo root:
+#   docker compose -f ci/docker-compose.ci.yml -p kt-ci up --build --abort-on-container-exit --exit-code-from tests
+#   docker compose -f ci/docker-compose.ci.yml -p kt-ci down -v
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: kilostravel
+      POSTGRES_USER: kilostravel
+      POSTGRES_PASSWORD: ci-only-password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kilostravel -d kilostravel"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  app:
+    image: kilostravel-backend:ci-${CI_TAG:-local}
+    build:
+      context: ../backend
+      target: production
+    environment:
+      DATABASE_URL: postgresql://kilostravel:ci-only-password@db:5432/kilostravel
+      RATE_LIMIT_ENABLED: "false"
+      ENVIRONMENT: ci
+      DEBUG: "false"
+    # One worker: several workers would race on create_all() at start-up.
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/health"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  tests:
+    image: kilostravel-backend:ci-${CI_TAG:-local}
+    pull_policy: never   # built by the "app" service above
+    environment:
+      BASE_URL: http://app:8000
+      RATE_LIMIT_ENABLED: "false"
+    command: ["pytest", "-m", "http", "-p", "no:cacheprovider", "--junitxml=/tmp/results/db.xml"]
+    depends_on:
+      app:
+        condition: service_healthy
