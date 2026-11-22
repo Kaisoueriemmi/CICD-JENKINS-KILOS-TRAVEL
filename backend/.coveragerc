@@ -1,0 +1,29 @@
+# Coverage settings for the pipeline (bonus: build turns yellow under 70 percent).
+[run]
+source = app
+branch = true
+# Third-party integrations that need paid API keys or system binaries
+# (Stripe, Google Vision / Tesseract OCR, Amadeus, SMTP, push notifications)
+# and two modules that nothing imports are outside the scope chosen for the
+# CI/CD project, see docs/CICD_SCOPE.md.
+omit =
+    app/services/stripe_service.py
+    app/services/ocr_service.py
+    app/services/amadeus_service.py
+    app/services/email_service.py
+    app/services/notification_service.py
+    app/api/v1/endpoints/payments.py
+    app/api/v1/endpoints/subscriptions.py
+    app/api/v1/endpoints/notifications.py
+    app/core/database_optimization.py
+    app/core/rate_limiter.py
+
+[report]
+show_missing = true
+skip_empty = true
+
+[xml]
+output = build/coverage/coverage.xml
+
+[html]
+directory = build/coverage/html

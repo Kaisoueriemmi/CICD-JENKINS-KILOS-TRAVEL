@@ -8,6 +8,7 @@ from app.schemas.schemas import FlightCreate, FlightResponse
 from app.core.config import settings
 from app.services.ocr_service import get_ocr_service, BaggageTicketOCR
 from app.services.amadeus_service import get_amadeus_service, AmadeusService
+from app.services.baggage_credit import calculate_credit_value, classify_flight
 import tempfile
 import os
 from pydantic import BaseModel
@@ -37,22 +38,6 @@ class BaggageAllowanceResponse(BaseModel):
     allowed_weight_kg: float
     source: str  # 'amadeus' or 'fallback'
     flight_type: str
-
-
-def calculate_credit_value(flight_type: FlightType, difference_kg: float) -> float:
-    """Calculate credit value based on flight type and weight difference"""
-    if difference_kg <= 0:
-        return 0.0
-    
-    multiplier = 1.0
-    if flight_type == FlightType.DOMESTIC:
-        multiplier = settings.DOMESTIC_FLIGHT_MULTIPLIER
-    elif flight_type == FlightType.INTERNATIONAL:
-        multiplier = settings.INTERNATIONAL_FLIGHT_MULTIPLIER
-    elif flight_type == FlightType.TRANSATLANTIC:
-        multiplier = settings.TRANSATLANTIC_FLIGHT_MULTIPLIER
-    
-    return difference_kg * multiplier
 
 
 @router.post("/", response_model=FlightResponse, status_code=status.HTTP_201_CREATED)
@@ -265,24 +250,14 @@ async def lookup_baggage_allowance(
         logger = logging.getLogger(__name__)
         logger.warning(f"Amadeus API lookup failed: {e}. Using fallback values.")
     
-    # Fallback: Determine flight type and default allowance
-    # Simple heuristic: if both airports are 3-letter codes from same region, it's domestic
-    departure = request.departure_airport.upper()
-    arrival = request.arrival_airport.upper()
-    
-    # Default to international
-    flight_type = FlightType.INTERNATIONAL
-    allowed_weight_kg = 23.0
-    
-    # Basic heuristic for flight type (can be improved)
-    # This is a simplified version - in production, use airport database
-    if len(departure) == 3 and len(arrival) == 3:
-        # Check if transatlantic (very simplified)
-        transatlantic_codes = ['JFK', 'LAX', 'ORD', 'MIA', 'ATL', 'BOS', 'SFO', 'IAD']
-        if departure in transatlantic_codes or arrival in transatlantic_codes:
-            flight_type = FlightType.TRANSATLANTIC
-            allowed_weight_kg = 32.0
-    
+    # Fallback: simple rule based on the IATA codes
+    try:
+        flight_type, allowed_weight_kg = classify_flight(
+            request.departure_airport, request.arrival_airport
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
     return BaggageAllowanceResponse(
         allowed_weight_kg=allowed_weight_kg,
         source='fallback',
