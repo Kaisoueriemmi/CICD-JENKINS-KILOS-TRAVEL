@@ -221,10 +221,17 @@ pipeline {
             archiveArtifacts artifacts: 'build/dist/*.tar.gz, build/test-results/*.xml, build/coverage/coverage.xml, build/coverage/html/**, build/*.log',
                              allowEmptyArchive: true,
                              fingerprint: true
+        }
 
-            // TODO Nesrine (F11): emailext to Mailpit on success and failure (before cleanWs)
+        // F11 - e-mail the team through Mailpit, version in the subject
+        success  { notifyTeam('SUCCESS') }
+        unstable { notifyTeam('UNSTABLE') }
+        failure  { notifyTeam('FAILURE') }
+        aborted  { notifyTeam('ABORTED') }
 
-            // F12 - empty workspace after every run (also on failure / abort)
+        // F12 - empty workspace after every run (also on failure / abort).
+        // "cleanup" runs after every other post condition, so after the e-mails.
+        cleanup {
             cleanWs()
         }
     }
@@ -238,4 +245,28 @@ def markTestResult(String name, int status) {
     } else if (status != 0) {
         error("${name}: tests could not run (exit code ${status})")
     }
+}
+
+// F11 - HTML e-mail to the team. Mailpit (SMTP set up in jenkins/casc.yaml)
+// catches every address, so nothing leaves the CI network.
+def notifyTeam(String status) {
+    def branch = env.GIT_BRANCH ?: 'n/a'
+    def commit = env.GIT_COMMIT ? env.GIT_COMMIT.take(8) : 'n/a'
+    emailext(
+        to: 'team@kilostravel.local',
+        subject: "[KilosTravel] ${status} - version ${env.IMAGE_TAG} (build #${env.BUILD_NUMBER})",
+        mimeType: 'text/html',
+        body: """
+            <h2>KilosTravel pipeline: ${status}</h2>
+            <table>
+              <tr><td><b>Job</b></td><td>${env.JOB_NAME}</td></tr>
+              <tr><td><b>Result</b></td><td>${status}</td></tr>
+              <tr><td><b>Version</b></td><td>${env.IMAGE_TAG}</td></tr>
+              <tr><td><b>Branch</b></td><td>${branch}</td></tr>
+              <tr><td><b>Commit</b></td><td>${commit}</td></tr>
+            </table>
+            <p><a href="${env.BUILD_URL}">Build #${env.BUILD_NUMBER}</a>
+             | <a href="${env.BUILD_URL}testReport/">Test report</a></p>
+        """
+    )
 }

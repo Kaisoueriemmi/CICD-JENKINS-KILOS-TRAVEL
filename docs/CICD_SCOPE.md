@@ -55,7 +55,9 @@ BASE_URL=http://localhost:8000 pytest -m http
 | HTTP tests vs PostgreSQL | bonus | `ci/docker-compose.ci.yml`: app container + PostgreSQL container + a tests container |
 | Coverage | bonus | unit tests + server-side coverage of the HTTP run, combined; yellow under 70 % |
 | Docker image / Push | F7 / F8 | only when everything above is green: `docker build --target production`, image `<DOCKERHUB_USER>/kilostravel-backend:1.0.<build>` (account from `jenkins/.env`, never `latest`), pushed with the `dockerhub-creds` token inside `withCredentials`; push wrapped in `timeout` + `retry(3)`, `docker logout` after |
-| post always | F4, F6, F12 | `junit` reports, `archiveArtifacts ... fingerprint: true`, `cleanWs()` |
+| post always | F4, F6 | `junit` reports, `archiveArtifacts ... fingerprint: true` |
+| post success / unstable / failure / aborted | F11 | `emailext` to Mailpit (`team@kilostravel.local`), version `1.0.<build>` in the subject, links to the build and its test report |
+| post cleanup | F12 | `cleanWs()`, runs last (after the e-mails) |
 
 Failed tests make the build **yellow** (UNSTABLE) and the Docker stages are skipped. Tests that cannot run at all (import error, server not starting) make it **red**.
 
