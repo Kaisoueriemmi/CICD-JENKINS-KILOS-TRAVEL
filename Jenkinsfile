@@ -32,6 +32,12 @@ pipeline {
         PIP_DISABLE_PIP_VERSION_CHECK = '1'
         PIP_NO_CACHE_DIR = '1'
         COVERAGE_MIN = '70'
+
+        // F7 - image name and tag: <version>.<build number>, never "latest".
+        // The Docker Hub account is Amine's (see the "dockerhub-creds" credential).
+        APP_VERSION = '1.0'
+        IMAGE_REPO  = 'aminebougui/kilostravel-backend'
+        IMAGE_TAG   = "${APP_VERSION}.${BUILD_NUMBER}"
     }
 
     stages {
@@ -157,8 +163,13 @@ pipeline {
         stage('Docker image') {
             when { expression { currentBuild.currentResult == 'SUCCESS' } }
             steps {
-                // TODO Nesrine (F7): docker build, tag <version>.<BUILD_NUMBER>
-                echo 'TODO F7 (Nesrine): build the Docker image'
+                // F7 - production stage of backend/Dockerfile, tagged 1.0.<build>
+                sh '''
+                    docker build --target production \
+                        --label org.opencontainers.image.version="$IMAGE_TAG" \
+                        -t "$IMAGE_REPO:$IMAGE_TAG" backend
+                    docker image ls "$IMAGE_REPO:$IMAGE_TAG"
+                '''
             }
         }
 
