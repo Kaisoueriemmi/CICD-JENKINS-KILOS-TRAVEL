@@ -22,7 +22,7 @@ async def get_users(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access this resource"
         )
-    
+
     users = db.query(User).offset(skip).limit(limit).all()
     return users
 
@@ -39,14 +39,14 @@ async def get_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access this resource"
         )
-    
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
+
     return user
 
 
@@ -63,23 +63,23 @@ async def update_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update this user"
         )
-    
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
+
     # Update fields
     if user_update.full_name is not None:
         user.full_name = user_update.full_name
     if user_update.phone_number is not None:
         user.phone_number = user_update.phone_number
-    
+
     db.commit()
     db.refresh(user)
-    
+
     return user
 
 
@@ -95,15 +95,15 @@ async def delete_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete this user"
         )
-    
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
+
     db.delete(user)
     db.commit()
-    
+
     return None

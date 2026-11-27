@@ -39,7 +39,7 @@ class PaymentHistoryResponse(BaseModel):
     plan_type: str
     status: str
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -52,7 +52,7 @@ async def create_checkout_session(
 ):
     """
     Create a Stripe checkout session for subscription payment
-    
+
     This endpoint creates a Stripe Checkout session that redirects
     the user to Stripe's hosted payment page.
     """
@@ -63,24 +63,24 @@ async def create_checkout_session(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid plan type. Must be one of: {', '.join(valid_plans)}"
         )
-    
+
     # Create checkout session
     success_url = "http://localhost:3000/subscription?success=true"
     cancel_url = "http://localhost:3000/subscription?cancelled=true"
-    
+
     session_data = stripe_service.create_checkout_session(
         user_email=current_user.email,
         plan_type=request.plan_type,
         success_url=success_url,
         cancel_url=cancel_url
     )
-    
+
     if not session_data:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create checkout session. Please try again later."
         )
-    
+
     return CheckoutSessionResponse(**session_data)
 
 
@@ -93,7 +93,7 @@ async def create_customer_portal_session(
 ):
     """
     Create a Stripe Customer Portal session
-    
+
     This allows users to manage their subscription, update payment methods,
     and view billing history.
     """
@@ -102,25 +102,25 @@ async def create_customer_portal_session(
         Subscription.user_id == current_user.id,
         Subscription.status == 'active'
     ).first()
-    
+
     if not subscription or not subscription.stripe_customer_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No active subscription found"
         )
-    
+
     # Create portal session
     portal_url = stripe_service.create_customer_portal_session(
         customer_id=subscription.stripe_customer_id,
         return_url=request.return_url
     )
-    
+
     if not portal_url:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create customer portal session"
         )
-    
+
     return CustomerPortalResponse(url=portal_url)
 
 
@@ -132,40 +132,40 @@ async def stripe_webhook(
 ):
     """
     Handle Stripe webhook events
-    
+
     This endpoint receives and processes webhook events from Stripe,
     such as successful payments, subscription updates, and cancellations.
     """
     # Get the webhook payload and signature
     payload = await request.body()
     signature = request.headers.get('stripe-signature')
-    
+
     if not signature:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Missing Stripe signature"
         )
-    
+
     # Verify webhook signature
     event = stripe_service.verify_webhook_signature(payload, signature)
-    
+
     if not event:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid webhook signature"
         )
-    
+
     # Handle different event types
     event_type = event['type']
-    
+
     if event_type == 'checkout.session.completed':
         # Payment successful, create/update subscription
         session = event['data']['object']
         subscription_data = stripe_service.handle_checkout_completed(session)
-        
+
         # Find user by email
         user = db.query(User).filter(User.email == subscription_data['customer_email']).first()
-        
+
         if user:
             # Update user role
             plan_type = subscription_data['plan_type']
@@ -173,7 +173,7 @@ async def stripe_webhook(
                 user.role = 'premium'
             elif plan_type == 'family':
                 user.role = 'family'
-            
+
             # Create subscription record
             new_subscription = Subscription(
                 user_id=user.id,
@@ -184,46 +184,46 @@ async def stripe_webhook(
                 price_paid=subscription_data['amount_paid'],
                 auto_renew=True
             )
-            
+
             db.add(new_subscription)
             db.commit()
-    
+
     elif event_type == 'customer.subscription.updated':
         # Subscription updated
         subscription = event['data']['object']
         subscription_data = stripe_service.handle_subscription_updated(subscription)
-        
+
         # Update subscription in database
         db_subscription = db.query(Subscription).filter(
             Subscription.stripe_subscription_id == subscription_data['subscription_id']
         ).first()
-        
+
         if db_subscription:
             db_subscription.status = subscription_data['status']
             db_subscription.auto_renew = not subscription_data['cancel_at_period_end']
             db.commit()
-    
+
     elif event_type == 'customer.subscription.deleted':
         # Subscription cancelled
         subscription = event['data']['object']
         subscription_data = stripe_service.handle_subscription_deleted(subscription)
-        
+
         # Update subscription in database
         db_subscription = db.query(Subscription).filter(
             Subscription.stripe_subscription_id == subscription_data['subscription_id']
         ).first()
-        
+
         if db_subscription:
             db_subscription.status = 'cancelled'
             db_subscription.auto_renew = False
-            
+
             # Downgrade user to free plan
             user = db.query(User).filter(User.id == db_subscription.user_id).first()
             if user:
                 user.role = 'user'
-            
+
             db.commit()
-    
+
     return {"status": "success"}
 
 
@@ -234,13 +234,13 @@ async def get_payment_history(
 ):
     """
     Get payment history for current user
-    
+
     Returns a list of all past subscription payments.
     """
     subscriptions = db.query(Subscription).filter(
         Subscription.user_id == current_user.id
     ).order_by(Subscription.created_at.desc()).all()
-    
+
     return [
         PaymentHistoryResponse(
             id=sub.id,

@@ -23,7 +23,7 @@ class OCRResponse(BaseModel):
     bag_tag: Optional[str]
     raw_text: str
     confidence: str
-    
+
 
 class BaggageAllowanceRequest(BaseModel):
     """Request model for baggage allowance lookup"""
@@ -31,7 +31,7 @@ class BaggageAllowanceRequest(BaseModel):
     departure_airport: str
     arrival_airport: str
     flight_date: str
-    
+
 
 class BaggageAllowanceResponse(BaseModel):
     """Response model for baggage allowance"""
@@ -49,10 +49,10 @@ async def create_flight(
     """Create a new flight record"""
     # Calculate difference
     difference_kg = flight_data.allowed_weight_kg - flight_data.actual_weight_kg
-    
+
     # Calculate credit value
     credit_value_kg = calculate_credit_value(flight_data.flight_type, difference_kg)
-    
+
     # Create flight
     new_flight = Flight(
         user_id=current_user.id,
@@ -69,11 +69,11 @@ async def create_flight(
         ticket_image_url=flight_data.ticket_image_url,
         scan_verified=False
     )
-    
+
     db.add(new_flight)
     db.commit()
     db.refresh(new_flight)
-    
+
     return new_flight
 
 
@@ -88,35 +88,35 @@ async def credit_flight_to_wallet(
         Flight.id == flight_id,
         Flight.user_id == current_user.id
     ).first()
-    
+
     if not flight:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Flight not found"
         )
-    
+
     if flight.is_credited:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Flight already credited"
         )
-    
+
     if flight.credit_value_kg <= 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No credits available for this flight"
         )
-    
+
     # Get wallet
     wallet = db.query(Wallet).filter(Wallet.user_id == current_user.id).first()
-    
+
     # Update wallet
     wallet.balance_kg += flight.credit_value_kg
     wallet.total_earned_kg += flight.credit_value_kg
-    
+
     # Mark flight as credited
     flight.is_credited = True
-    
+
     # Create transaction
     transaction = Transaction(
         user_id=current_user.id,
@@ -126,11 +126,11 @@ async def credit_flight_to_wallet(
         flight_id=flight.id,
         description=f"Credit from flight {flight.flight_number}"
     )
-    
+
     db.add(transaction)
     db.commit()
     db.refresh(flight)
-    
+
     return flight
 
 
@@ -145,7 +145,7 @@ async def get_flights(
     flights = db.query(Flight).filter(
         Flight.user_id == current_user.id
     ).offset(skip).limit(limit).all()
-    
+
     return flights
 
 
@@ -160,13 +160,13 @@ async def get_flight(
         Flight.id == flight_id,
         Flight.user_id == current_user.id
     ).first()
-    
+
     if not flight:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Flight not found"
         )
-    
+
     return flight
 
 
@@ -177,7 +177,7 @@ async def scan_ticket(
 ):
     """
     Scan baggage ticket using OCR
-    
+
     Upload an image or PDF of a baggage ticket to extract:
     - Flight number
     - Baggage weight
@@ -190,7 +190,7 @@ async def scan_ticket(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
         )
-    
+
     # Create temporary file
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp_file:
@@ -198,20 +198,20 @@ async def scan_ticket(
             content = await file.read()
             tmp_file.write(content)
             tmp_file_path = tmp_file.name
-        
+
         # Extract data using OCR
         extracted_data = ocr_service.extract_baggage_data(tmp_file_path)
-        
+
         # Clean up temporary file
         os.unlink(tmp_file_path)
-        
+
         return OCRResponse(**extracted_data)
-        
+
     except Exception as e:
         # Clean up temporary file if it exists
         if 'tmp_file_path' in locals() and os.path.exists(tmp_file_path):
             os.unlink(tmp_file_path)
-        
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"OCR processing failed: {str(e)}"
@@ -225,7 +225,7 @@ async def lookup_baggage_allowance(
 ):
     """
     Lookup baggage allowance for a flight
-    
+
     Uses Amadeus API to get accurate baggage allowance.
     Falls back to default values if API is unavailable.
     """
@@ -237,7 +237,7 @@ async def lookup_baggage_allowance(
             arrival=request.arrival_airport,
             date=request.flight_date
         )
-        
+
         if allowance_data:
             return BaggageAllowanceResponse(
                 allowed_weight_kg=allowance_data.get('weight_kg', 23.0),
@@ -249,7 +249,7 @@ async def lookup_baggage_allowance(
         import logging
         logger = logging.getLogger(__name__)
         logger.warning(f"Amadeus API lookup failed: {e}. Using fallback values.")
-    
+
     # Fallback: simple rule based on the IATA codes
     try:
         flight_type, allowed_weight_kg = classify_flight(

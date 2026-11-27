@@ -24,16 +24,16 @@ async def create_subscription(
         Subscription.status == "active",
         Subscription.end_date > datetime.utcnow()
     ).first()
-    
+
     if active_subscription:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User already has an active subscription"
         )
-    
+
     # Determine price
     amount = settings.PREMIUM_PRICE_MONTHLY if subscription_data.plan_type == UserRole.PREMIUM else settings.FAMILY_PRICE_MONTHLY
-    
+
     # Create subscription
     new_subscription = Subscription(
         user_id=current_user.id,
@@ -44,14 +44,14 @@ async def create_subscription(
         amount=amount,
         currency="EUR"
     )
-    
+
     # Update user role
     current_user.role = subscription_data.plan_type
-    
+
     db.add(new_subscription)
     db.commit()
     db.refresh(new_subscription)
-    
+
     return new_subscription
 
 
@@ -64,7 +64,7 @@ async def get_subscriptions(
     subscriptions = db.query(Subscription).filter(
         Subscription.user_id == current_user.id
     ).order_by(Subscription.created_at.desc()).all()
-    
+
     return subscriptions
 
 
@@ -79,13 +79,13 @@ async def get_active_subscription(
         Subscription.status == "active",
         Subscription.end_date > datetime.utcnow()
     ).first()
-    
+
     if not subscription:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No active subscription found"
         )
-    
+
     return subscription
 
 
@@ -100,27 +100,27 @@ async def cancel_subscription(
         Subscription.id == subscription_id,
         Subscription.user_id == current_user.id
     ).first()
-    
+
     if not subscription:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Subscription not found"
         )
-    
+
     if subscription.status != "active":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Subscription is not active"
         )
-    
+
     # Cancel subscription
     subscription.status = "cancelled"
     subscription.auto_renew = False
-    
+
     # Revert user role to free tier
     current_user.role = UserRole.USER
-    
+
     db.commit()
     db.refresh(subscription)
-    
+
     return subscription

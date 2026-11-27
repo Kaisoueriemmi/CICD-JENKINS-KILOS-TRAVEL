@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class EmailService:
     """Service for sending emails"""
-    
+
     def __init__(self):
         """Initialize email service with SMTP configuration"""
         self.smtp_host = getattr(settings, 'SMTP_HOST', 'smtp.gmail.com')
@@ -23,7 +23,7 @@ class EmailService:
         self.smtp_password = getattr(settings, 'SMTP_PASSWORD', None)
         self.from_email = getattr(settings, 'FROM_EMAIL', self.smtp_user)
         self.from_name = getattr(settings, 'FROM_NAME', 'AirWeight')
-    
+
     def send_email(
         self,
         to_email: str,
@@ -33,64 +33,64 @@ class EmailService:
     ) -> bool:
         """
         Send an email
-        
+
         Args:
             to_email: Recipient email address
             subject: Email subject
             html_content: HTML content of the email
             text_content: Plain text content (fallback)
-        
+
         Returns:
             True if email was sent successfully, False otherwise
         """
         if not self.smtp_user or not self.smtp_password:
             logger.warning("SMTP credentials not configured. Email not sent.")
             return False
-        
+
         try:
             # Create message
             msg = MIMEMultipart('alternative')
             msg['Subject'] = subject
             msg['From'] = f"{self.from_name} <{self.from_email}>"
             msg['To'] = to_email
-            
+
             # Add text and HTML parts
             if text_content:
                 part1 = MIMEText(text_content, 'plain')
                 msg.attach(part1)
-            
+
             part2 = MIMEText(html_content, 'html')
             msg.attach(part2)
-            
+
             # Send email
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 server.starttls()
                 server.login(self.smtp_user, self.smtp_password)
                 server.send_message(msg)
-            
+
             logger.info(f"Email sent successfully to {to_email}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {e}")
             return False
-    
+
     def send_verification_email(self, to_email: str, verification_token: str, user_name: str) -> bool:
         """
         Send email verification email
-        
+
         Args:
             to_email: User's email address
             verification_token: Verification token
             user_name: User's name
-        
+
         Returns:
             True if email was sent successfully
         """
         verification_url = f"{settings.FRONTEND_URL}/verify-email?token={verification_token}"
-        
+
         subject = "Verify your AirWeight account"
-        
+
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -128,41 +128,41 @@ class EmailService:
         </body>
         </html>
         """
-        
+
         text_content = f"""
         Welcome to AirWeight!
-        
+
         Hi {user_name},
-        
+
         Thank you for signing up! Please verify your email address by clicking the link below:
-        
+
         {verification_url}
-        
+
         This link will expire in 24 hours.
-        
+
         If you didn't create an account, you can safely ignore this email.
-        
+
         © 2026 AirWeight. All rights reserved.
         """
-        
+
         return self.send_email(to_email, subject, html_content, text_content)
-    
+
     def send_password_reset_email(self, to_email: str, reset_token: str, user_name: str) -> bool:
         """
         Send password reset email
-        
+
         Args:
             to_email: User's email address
             reset_token: Password reset token
             user_name: User's name
-        
+
         Returns:
             True if email was sent successfully
         """
         reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
-        
+
         subject = "Reset your AirWeight password"
-        
+
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -207,40 +207,40 @@ class EmailService:
         </body>
         </html>
         """
-        
+
         text_content = f"""
         Password Reset Request
-        
+
         Hi {user_name},
-        
+
         We received a request to reset your password for your AirWeight account.
-        
+
         Click the link below to reset your password:
-        
+
         {reset_url}
-        
+
         This link will expire in 1 hour.
-        
+
         If you didn't request this reset, please ignore this email. Your password will remain unchanged.
-        
+
         © 2026 AirWeight. All rights reserved.
         """
-        
+
         return self.send_email(to_email, subject, html_content, text_content)
-    
+
     def send_welcome_email(self, to_email: str, user_name: str) -> bool:
         """
         Send welcome email after successful verification
-        
+
         Args:
             to_email: User's email address
             user_name: User's name
-        
+
         Returns:
             True if email was sent successfully
         """
         subject = "Welcome to AirWeight! 🎉"
-        
+
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -263,7 +263,7 @@ class EmailService:
                 <div class="content">
                     <p>Hi {user_name},</p>
                     <p>Your account is now verified and ready to use! Start turning your unused baggage allowance into valuable credits.</p>
-                    
+
                     <h3>🚀 Get Started:</h3>
                     <div class="feature">
                         <strong>1. Add Your First Flight</strong><br>
@@ -277,11 +277,11 @@ class EmailService:
                         <strong>3. Use Your Credits</strong><br>
                         Transfer credits to others or save for future flights
                     </div>
-                    
+
                     <p style="text-align: center;">
                         <a href="{settings.FRONTEND_URL}/dashboard" class="button">Go to Dashboard</a>
                     </p>
-                    
+
                     <p>Need help? Check out our <a href="{settings.FRONTEND_URL}/help">Help Center</a> or reply to this email.</p>
                 </div>
                 <div class="footer">
@@ -291,26 +291,26 @@ class EmailService:
         </body>
         </html>
         """
-        
+
         text_content = f"""
         Welcome to AirWeight!
-        
+
         Hi {user_name},
-        
+
         Your account is now verified and ready to use! Start turning your unused baggage allowance into valuable credits.
-        
+
         Get Started:
         1. Add Your First Flight - Upload your boarding pass or enter flight details manually
         2. Earn Credits - Get credits for every kg of unused baggage allowance
         3. Use Your Credits - Transfer credits to others or save for future flights
-        
+
         Visit your dashboard: {settings.FRONTEND_URL}/dashboard
-        
+
         Need help? Check out our Help Center or reply to this email.
-        
+
         © 2026 AirWeight. All rights reserved.
         """
-        
+
         return self.send_email(to_email, subject, html_content, text_content)
 
 

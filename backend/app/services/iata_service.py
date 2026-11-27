@@ -27,7 +27,7 @@ class IATAService:
             # The actual endpoint will depend on the specific API subscribed to in the Hub
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    f"{self.base_url}/places", 
+                    f"{self.base_url}/places",
                     params={"q": query, "type": "airport"},
                     headers=self.headers
                 )
@@ -49,7 +49,7 @@ class IATAService:
     def _search_mock_data(self, query: str) -> List[Dict]:
         """Local sandbox data simulating IATA database"""
         query = query.lower()
-        
+
         # Extended list of major airports
         mock_db = [
             # Europe
@@ -63,7 +63,7 @@ class IATAService:
             {"code": "BCN", "name": "El Prat", "city": "Barcelona", "country": "Spain"},
             {"code": "FCO", "name": "Fiumicino", "city": "Rome", "country": "Italy"},
             {"code": "ZRH", "name": "Zürich Airport", "city": "Zurich", "country": "Switzerland"},
-            
+
             # North America
             {"code": "JFK", "name": "John F. Kennedy", "city": "New York", "country": "USA"},
             {"code": "EWR", "name": "Newark Liberty", "city": "New York", "country": "USA"},
@@ -72,7 +72,7 @@ class IATAService:
             {"code": "ORD", "name": "O'Hare", "city": "Chicago", "country": "USA"},
             {"code": "ATL", "name": "Hartsfield-Jackson", "city": "Atlanta", "country": "USA"},
             {"code": "YYZ", "name": "Pearson", "city": "Toronto", "country": "Canada"},
-            
+
             # Asia / Middle East
             {"code": "DXB", "name": "Dubai International", "city": "Dubai", "country": "UAE"},
             {"code": "HND", "name": "Haneda", "city": "Tokyo", "country": "Japan"},
@@ -80,7 +80,7 @@ class IATAService:
             {"code": "SIN", "name": "Changi", "city": "Singapore", "country": "Singapore"},
             {"code": "HKG", "name": "Hong Kong International", "city": "Hong Kong", "country": "China"},
             {"code": "DOH", "name": "Hamad International", "city": "Doha", "country": "Qatar"},
-            
+
             # Africa
             {"code": "TUN", "name": "Tunis-Carthage", "city": "Tunis", "country": "Tunisia"},
             {"code": "ALG", "name": "Houari Boumediene", "city": "Algiers", "country": "Algeria"},
@@ -91,8 +91,8 @@ class IATAService:
 
         return [
             airport for airport in mock_db
-            if query in airport["code"].lower() or 
-               query in airport["name"].lower() or 
+            if query in airport["code"].lower() or
+               query in airport["name"].lower() or
                query in airport["city"].lower()
         ][:10]
 

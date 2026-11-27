@@ -33,34 +33,34 @@ async def get_notifications(
 ):
     """
     Get user notifications with pagination
-    
+
     Args:
         skip: Number of notifications to skip
         limit: Maximum number of notifications to return
         unread_only: If True, return only unread notifications
         current_user: Current authenticated user
         db: Database session
-        
+
     Returns:
         List of notifications with total count and unread count
     """
     query = db.query(Notification).filter(Notification.user_id == current_user.id)
-    
+
     if unread_only:
         query = query.filter(Notification.is_read == False)
-    
+
     # Get total count
     total = query.count()
-    
+
     # Get unread count
     unread_count = db.query(Notification).filter(
         Notification.user_id == current_user.id,
         Notification.is_read == False
     ).count()
-    
+
     # Get notifications with pagination
     notifications = query.order_by(desc(Notification.created_at)).offset(skip).limit(limit).all()
-    
+
     return NotificationListResponse(
         notifications=notifications,
         total=total,
@@ -78,12 +78,12 @@ async def get_notification(
 ):
     """
     Get a specific notification by ID
-    
+
     Args:
         notification_id: ID of the notification
         current_user: Current authenticated user
         db: Database session
-        
+
     Returns:
         Notification details
     """
@@ -91,13 +91,13 @@ async def get_notification(
         Notification.id == notification_id,
         Notification.user_id == current_user.id
     ).first()
-    
+
     if not notification:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Notification not found"
         )
-    
+
     return notification
 
 
@@ -112,13 +112,13 @@ async def update_notification(
 ):
     """
     Update a notification (mark as read/unread)
-    
+
     Args:
         notification_id: ID of the notification
         notification_update: Update data
         current_user: Current authenticated user
         db: Database session
-        
+
     Returns:
         Updated notification
     """
@@ -126,13 +126,13 @@ async def update_notification(
         Notification.id == notification_id,
         Notification.user_id == current_user.id
     ).first()
-    
+
     if not notification:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Notification not found"
         )
-    
+
     # Update notification
     if notification_update.is_read is not None:
         notification.is_read = notification_update.is_read
@@ -140,10 +140,10 @@ async def update_notification(
             notification.read_at = datetime.utcnow()
         else:
             notification.read_at = None
-    
+
     db.commit()
     db.refresh(notification)
-    
+
     return notification
 
 
@@ -156,11 +156,11 @@ async def mark_all_read(
 ):
     """
     Mark all notifications as read for the current user
-    
+
     Args:
         current_user: Current authenticated user
         db: Database session
-        
+
     Returns:
         Success message with count of marked notifications
     """
@@ -171,9 +171,9 @@ async def mark_all_read(
         "is_read": True,
         "read_at": datetime.utcnow()
     })
-    
+
     db.commit()
-    
+
     return {
         "message": f"{count} notifications marked as read",
         "count": count
@@ -190,7 +190,7 @@ async def delete_notification(
 ):
     """
     Delete a notification
-    
+
     Args:
         notification_id: ID of the notification
         current_user: Current authenticated user
@@ -200,16 +200,16 @@ async def delete_notification(
         Notification.id == notification_id,
         Notification.user_id == current_user.id
     ).first()
-    
+
     if not notification:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Notification not found"
         )
-    
+
     db.delete(notification)
     db.commit()
-    
+
     return None
 
 
@@ -222,7 +222,7 @@ async def delete_all_notifications(
 ):
     """
     Delete all notifications for the current user
-    
+
     Args:
         current_user: Current authenticated user
         db: Database session
@@ -230,9 +230,9 @@ async def delete_all_notifications(
     db.query(Notification).filter(
         Notification.user_id == current_user.id
     ).delete()
-    
+
     db.commit()
-    
+
     return None
 
 
@@ -245,11 +245,11 @@ async def get_unread_count(
 ):
     """
     Get count of unread notifications
-    
+
     Args:
         current_user: Current authenticated user
         db: Database session
-        
+
     Returns:
         Count of unread notifications
     """
@@ -257,5 +257,5 @@ async def get_unread_count(
         Notification.user_id == current_user.id,
         Notification.is_read == False
     ).count()
-    
+
     return {"unread_count": count}

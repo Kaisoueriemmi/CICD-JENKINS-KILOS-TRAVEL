@@ -10,7 +10,7 @@ from typing import Optional
 
 class NotificationService:
     """Service for managing in-app notifications"""
-    
+
     @staticmethod
     def create_notification(
         db: Session,
@@ -25,7 +25,7 @@ class NotificationService:
     ) -> Notification:
         """
         Create a new notification
-        
+
         Args:
             db: Database session
             user_id: ID of the user to notify
@@ -36,7 +36,7 @@ class NotificationService:
             action_label: Optional label for action button
             related_flight_id: Optional related flight ID
             related_transaction_id: Optional related transaction ID
-            
+
         Returns:
             Created notification
         """
@@ -50,13 +50,13 @@ class NotificationService:
             related_flight_id=related_flight_id,
             related_transaction_id=related_transaction_id
         )
-        
+
         db.add(notification)
         db.commit()
         db.refresh(notification)
-        
+
         return notification
-    
+
     @staticmethod
     def notify_flight_credited(
         db: Session,
@@ -67,14 +67,14 @@ class NotificationService:
     ) -> Notification:
         """
         Create notification for flight credit
-        
+
         Args:
             db: Database session
             user_id: ID of the user
             flight_number: Flight number
             credit_kg: Amount of kg credited
             flight_id: ID of the flight
-            
+
         Returns:
             Created notification
         """
@@ -88,7 +88,7 @@ class NotificationService:
             action_label="Voir le vol",
             related_flight_id=flight_id
         )
-    
+
     @staticmethod
     def notify_wallet_debit(
         db: Session,
@@ -99,14 +99,14 @@ class NotificationService:
     ) -> Notification:
         """
         Create notification for wallet debit
-        
+
         Args:
             db: Database session
             user_id: ID of the user
             amount_kg: Amount of kg debited
             transaction_id: ID of the transaction
             description: Transaction description
-            
+
         Returns:
             Created notification
         """
@@ -120,7 +120,7 @@ class NotificationService:
             action_label="Voir la transaction",
             related_transaction_id=transaction_id
         )
-    
+
     @staticmethod
     def notify_transfer_sent(
         db: Session,
@@ -131,14 +131,14 @@ class NotificationService:
     ) -> Notification:
         """
         Create notification for transfer sent
-        
+
         Args:
             db: Database session
             user_id: ID of the sender
             amount_kg: Amount of kg transferred
             recipient_name: Name of the recipient
             transaction_id: ID of the transaction
-            
+
         Returns:
             Created notification
         """
@@ -152,7 +152,7 @@ class NotificationService:
             action_label="Voir la transaction",
             related_transaction_id=transaction_id
         )
-    
+
     @staticmethod
     def notify_transfer_received(
         db: Session,
@@ -163,14 +163,14 @@ class NotificationService:
     ) -> Notification:
         """
         Create notification for transfer received
-        
+
         Args:
             db: Database session
             user_id: ID of the recipient
             amount_kg: Amount of kg received
             sender_name: Name of the sender
             transaction_id: ID of the transaction
-            
+
         Returns:
             Created notification
         """
@@ -184,7 +184,7 @@ class NotificationService:
             action_label="Voir la transaction",
             related_transaction_id=transaction_id
         )
-    
+
     @staticmethod
     def notify_subscription_activated(
         db: Session,
@@ -193,12 +193,12 @@ class NotificationService:
     ) -> Notification:
         """
         Create notification for subscription activation
-        
+
         Args:
             db: Database session
             user_id: ID of the user
             plan_name: Name of the plan
-            
+
         Returns:
             Created notification
         """
@@ -211,7 +211,7 @@ class NotificationService:
             action_url="/subscription",
             action_label="Voir mon abonnement"
         )
-    
+
     @staticmethod
     def notify_subscription_expiring(
         db: Session,
@@ -221,13 +221,13 @@ class NotificationService:
     ) -> Notification:
         """
         Create notification for subscription expiring soon
-        
+
         Args:
             db: Database session
             user_id: ID of the user
             plan_name: Name of the plan
             days_left: Number of days until expiration
-            
+
         Returns:
             Created notification
         """
@@ -240,7 +240,7 @@ class NotificationService:
             action_url="/subscription",
             action_label="Renouveler"
         )
-    
+
     @staticmethod
     def notify_welcome(
         db: Session,
@@ -249,12 +249,12 @@ class NotificationService:
     ) -> Notification:
         """
         Create welcome notification for new users
-        
+
         Args:
             db: Database session
             user_id: ID of the user
             user_name: Name of the user
-            
+
         Returns:
             Created notification
         """
