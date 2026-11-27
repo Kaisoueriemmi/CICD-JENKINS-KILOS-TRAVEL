@@ -8,7 +8,6 @@ from sqlalchemy import desc
 from app.core.database import get_db
 from app.models.models import Notification, User
 from app.schemas.schemas import (
-    NotificationCreate,
     NotificationResponse,
     NotificationUpdate,
     NotificationListResponse
@@ -16,7 +15,6 @@ from app.schemas.schemas import (
 from app.api.v1.endpoints.auth import get_current_user
 from app.middleware.rate_limit import limiter, get_rate_limit
 from datetime import datetime
-from typing import Optional
 
 router = APIRouter()
 

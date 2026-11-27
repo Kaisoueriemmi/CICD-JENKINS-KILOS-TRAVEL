@@ -32,7 +32,10 @@ async def create_subscription(
         )
 
     # Determine price
-    amount = settings.PREMIUM_PRICE_MONTHLY if subscription_data.plan_type == UserRole.PREMIUM else settings.FAMILY_PRICE_MONTHLY
+    if subscription_data.plan_type == UserRole.PREMIUM:
+        amount = settings.PREMIUM_PRICE_MONTHLY
+    else:
+        amount = settings.FAMILY_PRICE_MONTHLY
 
     # Create subscription
     new_subscription = Subscription(

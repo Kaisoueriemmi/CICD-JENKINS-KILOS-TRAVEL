@@ -2,10 +2,11 @@
 Database optimization utilities for better query performance.
 """
 
-from sqlalchemy import Index, select, func
+from sqlalchemy import Index, func
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import QueuePool
 from backend.app.models.models import User, Flight, Notification, Wallet, Transaction
+
 
 def create_indexes(engine):
     """Create indexes for commonly queried fields."""

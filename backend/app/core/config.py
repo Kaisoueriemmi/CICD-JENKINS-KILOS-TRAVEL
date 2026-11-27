@@ -1,7 +1,6 @@
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
 from typing import List, Union, Optional
-import os
 
 
 class Settings(BaseSettings):
@@ -52,7 +51,7 @@ class Settings(BaseSettings):
     EMAILS_FROM_NAME: Optional[str] = None
 
     # IATA Integration
-    IATA_API_URL: str = "https://api.developer.iata.org/hub" # Default sandbox/hub URL
+    IATA_API_URL: str = "https://api.developer.iata.org/hub"  # Default sandbox/hub URL
     IATA_API_KEY: Optional[str] = None
 
     # Payment

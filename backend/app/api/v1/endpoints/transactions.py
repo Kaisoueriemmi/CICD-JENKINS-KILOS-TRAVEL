@@ -4,7 +4,7 @@ from typing import List
 from app.core.database import get_db
 from app.api.v1.endpoints.auth import get_current_user
 from app.models.models import User, Transaction, Wallet, TransactionType
-from app.schemas.schemas import TransactionResponse, TransactionCreate
+from app.schemas.schemas import TransactionResponse
 from app.core.config import settings
 from app.services.baggage_credit import check_debit, service_fee as compute_service_fee
 

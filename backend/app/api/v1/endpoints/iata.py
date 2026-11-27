@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from typing import List, Dict
+from typing import List
 from app.api.v1.endpoints.auth import get_current_user
 from app.models.models import User
 from app.services.iata_service import iata_service
@@ -7,11 +7,13 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+
 class AirportResponse(BaseModel):
     code: str
     name: str
     city: str
     country: str
+
 
 @router.get("/airports", response_model=List[AirportResponse])
 async def search_airports(

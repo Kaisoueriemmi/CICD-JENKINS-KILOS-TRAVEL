@@ -7,7 +7,12 @@ exclude =
     .git,
     __pycache__,
     .venv,
-    build
+    build,
+    # One-off database helper scripts, not part of the app or the tests
+    # (reset_db.py imports the models only to register their tables).
+    init_db.py,
+    reset_db.py,
+    seed_data.py
 per-file-ignores =
     # The test settings (environment variables) must be set before the app is
     # imported, so these imports are not at the top on purpose.

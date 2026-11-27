@@ -145,7 +145,7 @@ class NotificationService:
         return NotificationService.create_notification(
             db=db,
             user_id=user_id,
-            title=f"📤 Transfert envoyé",
+            title="📤 Transfert envoyé",
             message=f"{amount_kg:.1f} kg transférés à {recipient_name}",
             notification_type=NotificationType.TRANSFER,
             action_url=f"/transactions/{transaction_id}",
@@ -177,7 +177,7 @@ class NotificationService:
         return NotificationService.create_notification(
             db=db,
             user_id=user_id,
-            title=f"📥 Transfert reçu !",
+            title="📥 Transfert reçu !",
             message=f"+{amount_kg:.1f} kg reçus de {sender_name}",
             notification_type=NotificationType.CREDIT,
             action_url=f"/transactions/{transaction_id}",
@@ -234,8 +234,11 @@ class NotificationService:
         return NotificationService.create_notification(
             db=db,
             user_id=user_id,
-            title=f"⚠️ Abonnement expire bientôt",
-            message=f"Votre abonnement {plan_name} expire dans {days_left} jours. Renouvelez-le pour continuer à profiter des avantages !",
+            title="⚠️ Abonnement expire bientôt",
+            message=(
+                f"Votre abonnement {plan_name} expire dans {days_left} jours. "
+                "Renouvelez-le pour continuer à profiter des avantages !"
+            ),
             notification_type=NotificationType.WARNING,
             action_url="/subscription",
             action_label="Renouveler"

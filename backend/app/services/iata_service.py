@@ -1,6 +1,7 @@
 import httpx
-from typing import List, Dict, Optional
+from typing import List, Dict
 from app.core.config import settings
+
 
 class IATAService:
     def __init__(self):
@@ -91,9 +92,10 @@ class IATAService:
 
         return [
             airport for airport in mock_db
-            if query in airport["code"].lower() or
-               query in airport["name"].lower() or
-               query in airport["city"].lower()
+            if query in airport["code"].lower()
+            or query in airport["name"].lower()
+            or query in airport["city"].lower()
         ][:10]
+
 
 iata_service = IATAService()

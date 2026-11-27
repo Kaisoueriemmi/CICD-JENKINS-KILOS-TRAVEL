@@ -1,5 +1,7 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, users, wallet, flights, transactions, subscriptions, payments, notifications, iata, baggage
+from app.api.v1.endpoints import (
+    auth, users, wallet, flights, transactions, subscriptions, payments, notifications, iata, baggage
+)
 
 api_router = APIRouter()
 

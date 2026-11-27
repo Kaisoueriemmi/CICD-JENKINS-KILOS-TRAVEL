@@ -3,9 +3,8 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.core.database import get_db
 from app.api.v1.endpoints.auth import get_current_user
-from app.models.models import User, Flight, Wallet, Transaction, FlightType, TransactionType
+from app.models.models import User, Flight, Wallet, Transaction, TransactionType
 from app.schemas.schemas import FlightCreate, FlightResponse
-from app.core.config import settings
 from app.services.ocr_service import get_ocr_service, BaggageTicketOCR
 from app.services.amadeus_service import get_amadeus_service, AmadeusService
 from app.services.baggage_credit import calculate_credit_value, classify_flight
