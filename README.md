@@ -81,6 +81,43 @@ Backend:  http://localhost:8000
 API Docs: http://localhost:8000/docs
 ```
 
+### Run the backend alone with Docker (CI/CD project)
+
+This is the image the Jenkins pipeline builds: the `production` stage of
+`backend/Dockerfile` (Python 3.11, non-root user, port 8000, `HEALTHCHECK` on
+`/health`). It uses SQLite inside the container, so it needs no database or
+API keys. From the repository root:
+
+```bash
+# 1. Build the image (about 5 minutes the first time)
+docker build --target production -t kilostravel-backend:local backend/
+
+# 2. Run it on port 8000
+docker run -d -p 8000:8000 --name kt-local kilostravel-backend:local
+
+# 3. Wait about 30 seconds (first health check), then check it
+docker ps --filter name=kt-local        # STATUS: Up ... (healthy)
+curl http://localhost:8000/health
+curl "http://localhost:8000/api/v1/baggage/credit?flight_type=international&allowed_kg=23&actual_kg=18"
+
+# 4. Stop and remove it
+docker rm -f kt-local
+```
+
+| Address | Expected answer |
+|---|---|
+| `GET /health` | `{"status":"healthy","environment":"development"}` |
+| `GET /api/v1/baggage/credit?flight_type=international&allowed_kg=23&actual_kg=18` (smoke test) | `{"flight_type":"international","unused_kg":5.0,"credit_kg":7.5}` |
+| `GET /docs` | Swagger UI of the API |
+
+- On Windows PowerShell, write `curl.exe` instead of `curl`, and use
+  `Start-Sleep -Seconds 30` to wait.
+- Calling the app right after `docker run` gives `Empty reply from server`:
+  the app is still starting. Wait until `docker ps` shows `(healthy)`.
+- One uvicorn worker by default. More workers:
+  `docker run -e WEB_CONCURRENCY=4 ...` (with SQLite, several workers can
+  race when they create the tables at start-up).
+
 ### Option 2: Local Development
 
 **Backend:**
