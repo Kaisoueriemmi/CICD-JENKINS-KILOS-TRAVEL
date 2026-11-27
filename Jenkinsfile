@@ -34,9 +34,11 @@ pipeline {
         COVERAGE_MIN = '70'
 
         // F7 - image name and tag: <version>.<build number>, never "latest".
-        // The Docker Hub account is Amine's (see the "dockerhub-creds" credential).
+        // The Docker Hub account is the one in jenkins/.env (DOCKERHUB_USER, also
+        // used for the "dockerhub-creds" credential), so the push always goes to
+        // the account the token belongs to.
         APP_VERSION = '1.0'
-        IMAGE_REPO  = 'aminebougui/kilostravel-backend'
+        IMAGE_REPO  = "${env.DOCKERHUB_USER}/kilostravel-backend"
         IMAGE_TAG   = "${APP_VERSION}.${BUILD_NUMBER}"
     }
 
@@ -165,6 +167,9 @@ pipeline {
             steps {
                 // F7 - production stage of backend/Dockerfile, tagged 1.0.<build>
                 sh '''
+                    case "$IMAGE_REPO" in
+                        null/*|/*) echo "DOCKERHUB_USER is not set in jenkins/.env"; exit 1 ;;
+                    esac
                     docker build --target production \
                         --label org.opencontainers.image.version="$IMAGE_TAG" \
                         -t "$IMAGE_REPO:$IMAGE_TAG" backend
