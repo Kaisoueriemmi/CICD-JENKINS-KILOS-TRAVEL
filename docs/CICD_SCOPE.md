@@ -51,6 +51,7 @@ BASE_URL=http://localhost:8000 pytest -m http
 |---|---|---|
 | Checkout | F1 | Jenkins reads the Jenkinsfile from Git ("Pipeline script from SCM") |
 | Build | F2 | venv + `pip install -r backend/requirements.txt`, build archive in `build/dist/` |
+| Code quality | bonus | `flake8` on the backend with the rules in `backend/.flake8` (line length 120); any finding makes the build yellow (so no image), report archived as `build/flake8.log` |
 | Tests: Unit tests // HTTP tests | F3 | two parallel stages; the HTTP stage starts uvicorn and calls it (`ci/run_http_tests.sh`) |
 | HTTP tests vs PostgreSQL | bonus | `ci/docker-compose.ci.yml`: app container + PostgreSQL container + a tests container |
 | Coverage | bonus | unit tests + server-side coverage of the HTTP run, combined; yellow under 70 % |

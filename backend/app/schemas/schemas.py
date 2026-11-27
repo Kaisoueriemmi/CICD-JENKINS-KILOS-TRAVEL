@@ -14,7 +14,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8, max_length=100)
-    
+
     @validator('password')
     def validate_password(cls, v):
         if not any(char.isdigit() for char in v):
@@ -40,7 +40,7 @@ class UserResponse(UserBase):
     is_active: bool
     is_verified: bool
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -56,7 +56,7 @@ class WalletResponse(BaseModel):
     total_transferred_kg: float
     created_at: datetime
     updated_at: Optional[datetime]
-    
+
     class Config:
         from_attributes = True
 
@@ -86,7 +86,7 @@ class FlightResponse(FlightBase):
     is_credited: bool
     scan_verified: bool
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -110,7 +110,7 @@ class TransactionResponse(TransactionBase):
     balance_after: float
     service_fee: float
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -119,7 +119,7 @@ class TransactionResponse(TransactionBase):
 
 class SubscriptionCreate(BaseModel):
     plan_type: UserRole
-    
+
     @validator('plan_type')
     def validate_plan_type(cls, v):
         if v not in [UserRole.PREMIUM, UserRole.FAMILY]:
@@ -137,7 +137,7 @@ class SubscriptionResponse(BaseModel):
     amount: float
     currency: str
     auto_renew: bool
-    
+
     class Config:
         from_attributes = True
 
@@ -217,7 +217,7 @@ class NotificationResponse(NotificationBase):
     related_flight_id: Optional[int] = None
     related_transaction_id: Optional[int] = None
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 

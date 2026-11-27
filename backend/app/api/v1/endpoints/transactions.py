@@ -4,7 +4,7 @@ from typing import List
 from app.core.database import get_db
 from app.api.v1.endpoints.auth import get_current_user
 from app.models.models import User, Transaction, Wallet, TransactionType
-from app.schemas.schemas import TransactionResponse, TransactionCreate
+from app.schemas.schemas import TransactionResponse
 from app.core.config import settings
 from app.services.baggage_credit import check_debit, service_fee as compute_service_fee
 
@@ -22,7 +22,7 @@ async def get_transactions(
     transactions = db.query(Transaction).filter(
         Transaction.user_id == current_user.id
     ).order_by(Transaction.created_at.desc()).offset(skip).limit(limit).all()
-    
+
     return transactions
 
 
@@ -39,7 +39,7 @@ async def debit_from_wallet(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Amount must be positive"
         )
-    
+
     # Get wallet
     wallet = db.query(Wallet).filter(Wallet.user_id == current_user.id).first()
     if not wallet:
@@ -65,11 +65,11 @@ async def debit_from_wallet(
         service_fee=service_fee,
         description=description
     )
-    
+
     db.add(transaction)
     db.commit()
     db.refresh(transaction)
-    
+
     return transaction
 
 
@@ -86,14 +86,14 @@ async def transfer_to_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Amount must be positive"
         )
-    
+
     # Check if marketplace is enabled
     if not settings.ENABLE_MARKETPLACE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Marketplace feature is not enabled"
         )
-    
+
     # Get recipient
     recipient = db.query(User).filter(User.email == recipient_email).first()
     if not recipient:
@@ -101,32 +101,32 @@ async def transfer_to_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Recipient not found"
         )
-    
+
     if recipient.id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot transfer to yourself"
         )
-    
+
     # Get sender wallet
     sender_wallet = db.query(Wallet).filter(Wallet.user_id == current_user.id).first()
-    
+
     if sender_wallet.balance_kg < amount_kg:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Insufficient balance. Available: {sender_wallet.balance_kg} kg"
         )
-    
+
     # Get recipient wallet
     recipient_wallet = db.query(Wallet).filter(Wallet.user_id == recipient.id).first()
-    
+
     # Update wallets
     sender_wallet.balance_kg -= amount_kg
     sender_wallet.total_transferred_kg += amount_kg
-    
+
     recipient_wallet.balance_kg += amount_kg
     recipient_wallet.total_earned_kg += amount_kg
-    
+
     # Create sender transaction
     sender_transaction = Transaction(
         user_id=current_user.id,
@@ -136,7 +136,7 @@ async def transfer_to_user(
         recipient_user_id=recipient.id,
         description=f"Transfer to {recipient.email}"
     )
-    
+
     # Create recipient transaction
     recipient_transaction = Transaction(
         user_id=recipient.id,
@@ -145,10 +145,10 @@ async def transfer_to_user(
         balance_after=recipient_wallet.balance_kg,
         description=f"Transfer from {current_user.email}"
     )
-    
+
     db.add(sender_transaction)
     db.add(recipient_transaction)
     db.commit()
     db.refresh(sender_transaction)
-    
+
     return sender_transaction

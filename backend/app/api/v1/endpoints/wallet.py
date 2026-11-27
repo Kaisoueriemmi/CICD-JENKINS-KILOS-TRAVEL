@@ -16,13 +16,13 @@ async def get_wallet(
 ):
     """Get current user's wallet"""
     wallet = db.query(Wallet).filter(Wallet.user_id == current_user.id).first()
-    
+
     if not wallet:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Wallet not found"
         )
-    
+
     return wallet
 
 
@@ -33,20 +33,20 @@ async def get_wallet_stats(
 ):
     """Get wallet statistics and dashboard data"""
     wallet = db.query(Wallet).filter(Wallet.user_id == current_user.id).first()
-    
+
     if not wallet:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Wallet not found"
         )
-    
+
     # Calculate stats
     from app.models.models import Flight
     total_flights = db.query(Flight).filter(Flight.user_id == current_user.id).count()
-    
+
     money_saved = estimate_money_saved(wallet.total_spent_kg)
     carbon_footprint_reduced = carbon_reduced(wallet.total_earned_kg)
-    
+
     return DashboardStats(
         total_kg_saved=wallet.total_earned_kg,
         total_kg_used=wallet.total_spent_kg,

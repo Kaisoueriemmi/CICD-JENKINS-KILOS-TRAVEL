@@ -42,16 +42,16 @@ RATE_LIMITS = {
     "auth_register": "3/minute",
     "auth_forgot_password": "3/minute",
     "auth_reset_password": "3/minute",
-    
+
     # OCR - modérément restrictif (coûteux en ressources)
     "ocr_scan": "10/minute",
-    
+
     # API générale - permissif
     "api_general": "60/minute",
-    
+
     # Création de ressources - modéré
     "create_resource": "30/minute",
-    
+
     # Lecture - très permissif
     "read_resource": "100/minute",
 }
@@ -60,10 +60,10 @@ RATE_LIMITS = {
 def get_rate_limit(endpoint_type: str) -> str:
     """
     Récupère la limite de taux pour un type d'endpoint donné
-    
+
     Args:
         endpoint_type: Type d'endpoint (auth_login, ocr_scan, etc.)
-        
+
     Returns:
         Limite de taux au format "X/minute" ou "X/hour"
     """

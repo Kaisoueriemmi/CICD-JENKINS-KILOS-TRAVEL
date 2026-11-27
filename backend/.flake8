@@ -1,0 +1,25 @@
+# flake8 settings for the "Code quality" stage of the Jenkinsfile (bonus).
+# Run from backend/:  flake8
+[flake8]
+max-line-length = 120
+filename = *.py
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    build,
+    # One-off database helper scripts, not part of the app or the tests
+    # (reset_db.py imports the models only to register their tables).
+    init_db.py,
+    reset_db.py,
+    seed_data.py
+per-file-ignores =
+    # The test settings (environment variables) must be set before the app is
+    # imported, so these imports are not at the top on purpose.
+    tests/conftest.py: E402
+    # "column == False" builds a SQL condition in SQLAlchemy queries.
+    # "is False" or "not column" would break the query, so E712 is a false alarm here.
+    app/api/v1/endpoints/notifications.py: E712
+    app/core/database_optimization.py: E712
+    # Long lines are inline HTML/CSS of the e-mail templates.
+    app/services/email_service.py: E501
