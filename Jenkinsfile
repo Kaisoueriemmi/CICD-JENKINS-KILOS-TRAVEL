@@ -62,6 +62,28 @@ pipeline {
             }
         }
 
+        // Bonus: code quality. flake8 checks the backend style (rules in
+        // backend/.flake8). Findings make the build yellow, so no image is built;
+        // the report is archived as build/flake8.log.
+        stage('Code quality') {
+            agent {
+                docker { image 'python:3.11-slim'; reuseNode true; args '-e HOME=/tmp' }
+            }
+            steps {
+                dir('backend') {
+                    script {
+                        def status = sh(returnStatus: true, script: '''
+                            ../.venv/bin/flake8 --count --statistics --tee \
+                                --output-file=../build/flake8.log
+                        ''')
+                        if (status != 0) {
+                            unstable('Code quality: flake8 found style problems, see build/flake8.log')
+                        }
+                    }
+                }
+            }
+        }
+
         // F3 - unit tests and HTTP tests side by side
         stage('Tests') {
             parallel {
