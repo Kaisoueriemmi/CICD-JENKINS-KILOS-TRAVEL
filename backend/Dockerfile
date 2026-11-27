@@ -73,5 +73,12 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
+# Number of uvicorn workers. 1 by default: at start-up every worker runs
+# create_all() on the same database at the same time, and with several
+# workers one of them can crash with "table ... already exists" (seen with
+# docker run on SQLite). uvicorn reads WEB_CONCURRENCY when --workers is not
+# given, so it can still be raised with: docker run -e WEB_CONCURRENCY=4 ...
+ENV WEB_CONCURRENCY=1
+
 # Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
