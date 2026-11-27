@@ -1,0 +1,107 @@
+# Bonus: GitHub Actions runs the same CI as the Jenkinsfile (build + unit tests
+# + HTTP tests) on every push and pull request, so GitHub shows a check on each
+# commit. Jenkins still does everything after the tests (image, push, deploy).
+# Comparison with the Jenkinsfile: docs/GITHUB_ACTIONS_VS_JENKINS.md
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:      # "Run workflow" button in the Actions tab
+
+# A new push on the same branch cancels the run that is still going.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"  # same as the python:3.11-slim image used by Jenkins
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+jobs:
+  # Jenkins "Build" stage: install the dependencies and compile the code.
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r backend/requirements.txt
+      - name: Compile the app
+        run: .venv/bin/python -m compileall -q backend/app
+
+  # Jenkins "Tests" stage: the two jobs below run in parallel, like the two
+  # parallel stages. Each job gets a fresh machine, so each one installs the
+  # dependencies again (the pip cache makes it quick).
+  unit-tests:
+    name: Unit tests
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r backend/requirements.txt
+      - name: Run the unit tests
+        working-directory: backend
+        run: |
+          mkdir -p ../build/test-results
+          ../.venv/bin/pytest -m unit --junitxml=../build/test-results/unit.xml
+      - name: Keep the JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: build/test-results/unit.xml
+          if-no-files-found: warn
+
+  http-tests:
+    name: HTTP tests
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r backend/requirements.txt
+      # Same script as Jenkins: starts uvicorn, waits for /health, runs
+      # "pytest -m http" against it over real HTTP, then stops the server.
+      - name: Run the HTTP tests against a running server
+        run: sh ci/run_http_tests.sh
+      - name: Show the server log if something failed
+        if: failure()
+        run: cat build/http-server.log || true
+      - name: Keep the JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: http-test-report
+          path: build/test-results/http.xml
+          if-no-files-found: warn
