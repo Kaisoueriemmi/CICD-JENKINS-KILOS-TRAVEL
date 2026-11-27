@@ -179,11 +179,24 @@ pipeline {
                 // Bonus (Kais): the push is retried 3 times and cannot hang.
                 timeout(time: 10, unit: 'MINUTES') {
                     retry(3) {
-                        // TODO Nesrine (F8): withCredentials([usernamePassword(
-                        //   credentialsId: 'dockerhub-creds', ...)]) { docker login + docker push }
-                        echo 'TODO F8 (Nesrine): push the image to Docker Hub'
+                        // F8 - Read & Write token from the "dockerhub-creds" credential.
+                        // Single quotes: the shell reads the token, Groovy never puts
+                        // it in the command line, and Jenkins masks it in the log.
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                                          usernameVariable: 'DH_USER',
+                                                          passwordVariable: 'DH_TOKEN')]) {
+                            sh '''
+                                echo "$DH_TOKEN" | docker login -u "$DH_USER" --password-stdin
+                                docker push "$IMAGE_REPO:$IMAGE_TAG"
+                            '''
+                        }
                     }
                 }
+            }
+            post {
+                // Log out even when the push fails, so no token stays on the host.
+                // The image is kept: the staging and production stages use it.
+                always { sh 'docker logout || true' }
             }
         }
 
