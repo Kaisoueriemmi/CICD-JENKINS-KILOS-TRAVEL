@@ -62,6 +62,8 @@ BASE_URL=http://localhost:8000 pytest -m http
 
 Failed tests make the build **yellow** (UNSTABLE) and the Docker stages are skipped. Tests that cannot run at all (import error, server not starting) make it **red**.
 
+GitHub Actions (bonus): `.github/workflows/ci.yml` runs Build, then Unit tests and HTTP tests in parallel on every push and pull request, so GitHub shows a check on each commit. Comparison with this Jenkinsfile: [GITHUB_ACTIONS_VS_JENKINS.md](GITHUB_ACTIONS_VS_JENKINS.md).
+
 Automatic triggers: `pollSCM('H/5 * * * *')` (about every 5 minutes) and `cron('H 2 * * *')` (nightly). The whole pipeline stops after 30 minutes.
 
 Coverage measured locally: **77 %** (threshold 70 %).
