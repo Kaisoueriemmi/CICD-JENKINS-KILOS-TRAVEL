@@ -32,6 +32,14 @@ pipeline {
         PIP_DISABLE_PIP_VERSION_CHECK = '1'
         PIP_NO_CACHE_DIR = '1'
         COVERAGE_MIN = '70'
+
+        // F7 - image name and tag: <version>.<build number>, never "latest".
+        // The Docker Hub account is the one in jenkins/.env (DOCKERHUB_USER, also
+        // used for the "dockerhub-creds" credential), so the push always goes to
+        // the account the token belongs to.
+        APP_VERSION = '1.0'
+        IMAGE_REPO  = "${env.DOCKERHUB_USER}/kilostravel-backend"
+        IMAGE_TAG   = "${APP_VERSION}.${BUILD_NUMBER}"
     }
 
     stages {
@@ -157,8 +165,16 @@ pipeline {
         stage('Docker image') {
             when { expression { currentBuild.currentResult == 'SUCCESS' } }
             steps {
-                // TODO Nesrine (F7): docker build, tag <version>.<BUILD_NUMBER>
-                echo 'TODO F7 (Nesrine): build the Docker image'
+                // F7 - production stage of backend/Dockerfile, tagged 1.0.<build>
+                sh '''
+                    case "$IMAGE_REPO" in
+                        null/*|/*) echo "DOCKERHUB_USER is not set in jenkins/.env"; exit 1 ;;
+                    esac
+                    docker build --target production \
+                        --label org.opencontainers.image.version="$IMAGE_TAG" \
+                        -t "$IMAGE_REPO:$IMAGE_TAG" backend
+                    docker image ls "$IMAGE_REPO:$IMAGE_TAG"
+                '''
             }
         }
 
@@ -168,11 +184,24 @@ pipeline {
                 // Bonus (Kais): the push is retried 3 times and cannot hang.
                 timeout(time: 10, unit: 'MINUTES') {
                     retry(3) {
-                        // TODO Nesrine (F8): withCredentials([usernamePassword(
-                        //   credentialsId: 'dockerhub-creds', ...)]) { docker login + docker push }
-                        echo 'TODO F8 (Nesrine): push the image to Docker Hub'
+                        // F8 - Read & Write token from the "dockerhub-creds" credential.
+                        // Single quotes: the shell reads the token, Groovy never puts
+                        // it in the command line, and Jenkins masks it in the log.
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                                          usernameVariable: 'DH_USER',
+                                                          passwordVariable: 'DH_TOKEN')]) {
+                            sh '''
+                                echo "$DH_TOKEN" | docker login -u "$DH_USER" --password-stdin
+                                docker push "$IMAGE_REPO:$IMAGE_TAG"
+                            '''
+                        }
                     }
                 }
+            }
+            post {
+                // Log out even when the push fails, so no token stays on the host.
+                // The image is kept: the staging and production stages use it.
+                always { sh 'docker logout || true' }
             }
         }
 
