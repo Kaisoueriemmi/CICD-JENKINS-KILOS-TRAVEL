@@ -11,12 +11,12 @@ One PNG per line, with the exact file name below. Take them on the shared Jenkin
 | 3 | `03-yellow-run-docker-skipped.png` + `03b-yellow-run-failed-test.png` | Run #9, yellow: one test broken on purpose, "Docker image" and "Push to Docker Hub" skipped; its Test Result page (1 failed, 59 passed) | F4 | ✅ |
 | 4 | `04-artifacts-fingerprint.png` | Recorded fingerprints of the archived artifacts (`.tar.gz`, test XML, coverage) | F6 | ✅ |
 | 5 | `05-coverage-report.png` | Coverage report (77 %, threshold 70 %) | bonus | ✅ |
-| 6 | `06-dockerhub-tags.png` | Docker Hub: "Tags" tab of the repository (`<version>.<build>`) | F7, F8 | ⬜ |
+| 6 | `06-dockerhub-tags.png` | Docker Hub: "Tags" tab of `nesrinebousrih/kilostravel-backend`, tag `1.0.10` pushed by run #10 | F7, F8 | ✅ |
 | 7 | `07-docker-ps-staging-prod.png` | `docker ps` with staging (8081) and production (8082) | F9, F10 | ⬜ |
 | 8 | `08-app-staging.png` | The app in the browser on staging: `http://HOST:8081/health` | F9 | ⬜ |
 | 9 | `09-app-production.png` | The app in the browser on production: `http://HOST:8082/health` | F10 | ⬜ |
 | 10 | `10-approval-input.png` | The "Deploy to production?" approval step | F10 | ⬜ |
-| 11 | `11-mailpit-email.png` | The success / failure email in Mailpit | F11 | ⬜ |
+| 11 | `11-mailpit-email.png` | Mailpit: "[KilosTravel] SUCCESS - version 1.0.10 (build #10)" sent to the team | F11 | ✅ |
 | 12 | `12-github-contributors.png` | GitHub Insights > Contributors: all three members | history | ⬜ |
 | 13 | `13-github-merged-prs.png` | GitHub pull requests: every change merged through a reviewed PR | history | ⬜ |
 
